@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Users & Auth
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String    // bcrypt hashed
+  role          String    @default("VIEWER") // "ADMIN", "PROJECT_MANAGER", "DESIGNER", "DEVELOPER", "QA", "VIEWER"
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  assignedPages Page[]       @relation("AssignedTo")
+  createdProjects Project[]    @relation("CreatedBy")
+  comments      Comment[]
+  activities    Activity[]
+  notifications Notification[]
+}
+
+// Projects
+model Project {
+  id            String    @id @default(cuid())
+  name          String
+  clientName    String
+  brief         String
+  priority      String    @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "URGENT"
+  deadline      DateTime
+  status        String    @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED", "BLOCKED", "ON_HOLD"
+  currentPhase  String    @default("DESIGN") // "DESIGN", "DESIGN_QA", "DESIGN_APPROVAL", "DEVELOPMENT", "DEV_QA", "CLIENT_PREVIEW", "DELIVERED"
+  designQAEnabled Boolean @default(true)
+  shareToken    String    @unique @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  creatorId     String
+  creator       User      @relation("CreatedBy", fields: [creatorId], references: [id])
+  
+  pages         Page[]
+  attachments   Attachment[]
+  comments      Comment[]
+  activities    Activity[]
+  revisions     Revision[]
+}
+
+// Pages / Tasks (per project)
+model Page {
+  id            String    @id @default(cuid())
+  name          String    // "Homepage", "Product Page", etc.
+  type          String    @default("CUSTOM") // "HOMEPAGE", "PRODUCT", "COLLECTION", "CUSTOM"
+  designStatus  String    @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+  devStatus     String    @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+  qaStatus      String    @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  designNotes   String?
+  devNotes      String?
+  figmaLink     String?
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  assigneeId    String?
+  assignee      User?     @relation("AssignedTo", fields: [assigneeId], references: [id])
+  
+  attachments   Attachment[]
+  comments      Comment[]
+  revisions     Revision[]
+}
+
+// Revisions
+model Revision {
+  id          String   @id @default(cuid())
+  version     Int
+  description String
+  type        String   // "design" | "development" | "post-delivery"
+  status      String   @default("open") // "open" | "resolved"
+  createdAt   DateTime @default(now())
+  
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pageId      String?
+  page        Page?    @relation(fields: [pageId], references: [id])
+  
+  comments    Comment[]
+  attachments Attachment[]
+}
+
+// Comments
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pageId    String?
+  page      Page?    @relation(fields: [pageId], references: [id])
+  revisionId String?
+  revision  Revision? @relation(fields: [revisionId], references: [id])
+}
+
+// Activity Timeline
+model Activity {
+  id        String   @id @default(cuid())
+  action    String   // "created_project", "moved_to_design", "uploaded_design", etc.
+  details   String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// File Attachments
+model Attachment {
+  id        String   @id @default(cuid())
+  filename  String
+  filepath  String
+  mimetype  String
+  size      Int
+  createdAt DateTime @default(now())
+  
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pageId     String?
+  page       Page?     @relation(fields: [pageId], references: [id])
+  revisionId String?
+  revision   Revision? @relation(fields: [revisionId], references: [id])
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
