@@ -5,7 +5,7 @@ import prisma from "./prisma"
 import bcrypt from "bcryptjs"
 
 export const authOptions: NextAuthConfig = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   session: { strategy: "jwt" },
   providers: [
     CredentialsProvider({
