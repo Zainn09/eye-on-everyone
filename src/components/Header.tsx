@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 "use client"
 
+=======
+>>>>>>> deb9218e9238a7d755406e066ade7e688a1f742d
 import { Bell, Search, Plus } from "lucide-react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"

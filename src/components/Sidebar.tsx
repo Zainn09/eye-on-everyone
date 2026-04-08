@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 "use client"
 
+=======
+>>>>>>> deb9218e9238a7d755406e066ade7e688a1f742d
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, KanbanSquare, PieChart, Users, Settings, LogOut } from "lucide-react"
