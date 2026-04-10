@@ -49,6 +49,8 @@ export default async function DashboardPage() {
       activities={JSON.parse(JSON.stringify(activities))}
       stats={{ totalProjects, inProgress, completed, overdue }}
       userName={session.user.name || "User"}
+      currentUserId={session.user.id}
+      currentUserRole={session.user.role as any}
     />
   )
 }

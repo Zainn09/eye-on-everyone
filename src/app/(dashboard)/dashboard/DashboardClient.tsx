@@ -25,9 +25,11 @@ interface DashboardClientProps {
     overdue: number
   }
   userName: string
+  currentUserId: string
+  currentUserRole: string
 }
 
-export function DashboardClient({ projects, activities, stats, userName }: DashboardClientProps) {
+export function DashboardClient({ projects, activities, stats, userName, currentUserId, currentUserRole }: DashboardClientProps) {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [phaseFilter, setPhaseFilter] = useState("")
@@ -103,7 +105,7 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
       </div>
 
       {/* Stats Cards */}
-      <div className="stats-grid mb-8">
+      <div className="stats-grid" style={{ marginBottom: "2rem" }}>
         <div className="stat-card" style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.01))", borderColor: "rgba(139,92,246,0.2)" }}>
           <div className="stat-icon" style={{ background: "rgba(139,92,246,0.15)", color: "#a78bfa" }}>
             <FolderKanban size={24} />
@@ -146,9 +148,9 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
       </div>
 
       {/* Analytics Overview and Quick Actions */}
-      <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card lg:col-span-2 p-5" style={{ background: "linear-gradient(180deg, rgba(22,22,31,0.4), rgba(22,22,31,0.8))" }}>
-          <h3 className="font-semibold mb-4 text-sm tracking-wide text-muted uppercase flex items-center gap-2">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+        <div className="card" style={{ gridColumn: "1 / -1", padding: "1.25rem", background: "linear-gradient(180deg, rgba(22,22,31,0.4), rgba(22,22,31,0.8))" }}>
+          <h3 className="font-semibold" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", letterSpacing: "0.05em", color: "var(--color-text-muted)", textTransform: "uppercase", marginBottom: "1rem" }}>
             <BarChart2 size={16} /> Status Overview
           </h3>
           <div style={{ height: "240px", width: "100%" }}>
@@ -178,18 +180,18 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
           </div>
         </div>
         
-        <div className="card p-5" style={{ background: "linear-gradient(180deg, rgba(22,22,31,0.4), rgba(22,22,31,0.8))" }}>
-          <h3 className="font-semibold mb-4 text-sm tracking-wide text-muted uppercase flex items-center gap-2">
+        <div className="card" style={{ padding: "1.25rem", background: "linear-gradient(180deg, rgba(22,22,31,0.4), rgba(22,22,31,0.8))" }}>
+          <h3 className="font-semibold" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", letterSpacing: "0.05em", color: "var(--color-text-muted)", textTransform: "uppercase", marginBottom: "1rem" }}>
             Quick Actions
           </h3>
-          <div className="flex flex-col gap-3">
-             <Link href="/projects/new" className="btn btn-secondary w-full justify-start border-white/5 hover:border-primary/50 transition-all">
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+             <Link href="/projects/new" className="btn btn-secondary" style={{ justifyContent: "flex-start", width: "100%", borderColor: "rgba(255,255,255,0.05)" }}>
                 <Plus size={16} style={{ color: "#a78bfa" }} /> Create New Project
              </Link>
-             <Link href="/board" className="btn btn-secondary w-full justify-start border-white/5 hover:border-primary/50 transition-all">
+             <Link href="/board" className="btn btn-secondary" style={{ justifyContent: "flex-start", width: "100%", borderColor: "rgba(255,255,255,0.05)" }}>
                 <FolderKanban size={16} style={{ color: "#60a5fa" }} /> Go to Kanban Board
              </Link>
-             <Link href="/analytics" className="btn btn-secondary w-full justify-start border-white/5 hover:border-primary/50 transition-all">
+             <Link href="/analytics" className="btn btn-secondary" style={{ justifyContent: "flex-start", width: "100%", borderColor: "rgba(255,255,255,0.05)" }}>
                 <Activity size={16} style={{ color: "#34d399" }} /> View Detailed Analytics
              </Link>
           </div>
@@ -198,14 +200,14 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
 
       {/* Active Project Flowchart */}
       {filtered.length > 0 && (
-        <div className="card mb-8 p-6" style={{ background: "linear-gradient(180deg, rgba(22,22,31,0.6), rgba(10,10,15,0.9))", borderColor: "rgba(139,92,246,0.3)" }}>
-          <div className="flex items-center justify-between mb-6">
+        <div className="card" style={{ marginBottom: "2rem", padding: "1.5rem", background: "linear-gradient(180deg, rgba(22,22,31,0.6), rgba(10,10,15,0.9))", borderColor: "rgba(139,92,246,0.3)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
             <div>
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 style={{ fontSize: "1.125rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <GitBranch className="text-primary" /> Active Project Workflow
               </h2>
-              <p className="text-sm text-muted mt-1" style={{ color: "#9ca3af" }}>
-                Tracking current progress for <strong className="text-white">{filtered[0].name}</strong> ({filtered[0].clientName})
+              <p style={{ fontSize: "0.875rem", color: "#9ca3af", marginTop: "0.25rem" }}>
+                Tracking current progress for <strong style={{ color: "#ffffff" }}>{filtered[0].name}</strong> ({filtered[0].clientName})
               </p>
             </div>
             <Link href={`/projects/${filtered[0].id}`} className="btn btn-primary btn-sm">
@@ -213,7 +215,7 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
             </Link>
           </div>
 
-          <div className="workflow-stepper py-4 overflow-x-auto no-scrollbar" style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="workflow-stepper no-scrollbar" style={{ padding: "1rem 0", overflowX: "auto", display: 'flex', gap: '0.5rem' }}>
             {[
               { id: "DESIGN", label: "Design", icon: <Palette size={18} /> },
               { id: "DESIGN_QA", label: "Design QA", icon: <CheckCircle2 size={18} /> },
@@ -233,31 +235,33 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
               else if (isActive) { color = "#8b5cf6"; bgColor = "rgba(139, 92, 246, 0.25)"; }
 
               return (
-                <div key={phase.id} className="flex items-center flex-shrink-0">
-                  <div className="flex flex-col items-center gap-3 w-28 relative transition-all duration-300 hover:-translate-y-1">
+                <div key={phase.id} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", width: "7rem", position: "relative" }}>
                     <div 
-                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 transition-all`}
                       style={{ 
+                        width: "3rem", height: "3rem", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid", zIndex: 10,
                         borderColor: color, 
                         backgroundColor: bgColor,
                         color: color,
-                        boxShadow: isActive ? `0 0 20px ${color}80` : 'none'
+                        boxShadow: isActive ? `0 0 20px ${color}80` : 'none',
+                        transition: "all 0.3s"
                       }}
                     >
                       {phase.icon}
                     </div>
-                    <div className="text-center">
-                      <div className="text-xs font-semibold" style={{ color: isActive || isCompleted ? '#f1f0ff' : '#6b7280' }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 600, color: isActive || isCompleted ? '#f1f0ff' : '#6b7280' }}>
                         {phase.label}
                       </div>
-                      <div className="text-[10px] uppercase tracking-wider mt-1" style={{ color }}>
+                      <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "0.25rem", color }}>
                         {isCompleted ? "Done" : isActive ? "Active" : "Pending"}
                       </div>
                     </div>
                   </div>
                   
                   {idx < arr.length - 1 && (
-                    <div className="w-10 h-[3px] shrink-0 -mt-10 rounded-full" style={{ 
+                    <div style={{ 
+                      width: "2.5rem", height: "3px", flexShrink: 0, marginTop: "-2.5rem", borderRadius: "9999px",
                       background: isCompleted ? "linear-gradient(90deg, #10b981, rgba(16, 185, 129, 0.3))" : "#32324a" 
                     }} />
                   )}
@@ -420,43 +424,116 @@ export function DashboardClient({ projects, activities, stats, userName }: Dashb
           )}
         </div>
 
-        {/* Activity Sidebar */}
-        <div className="card" style={{ width: "340px", flexShrink: 0 }}>
-          <div className="card-header">
-            <h3 className="font-semibold" style={{ fontSize: "0.95rem" }}>Recent Activity</h3>
+        {/* Activity Sidebar & Work Tracking */}
+        <div style={{ width: "340px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          {/* Work Tracking / Queue Panel */}
+          <div className="card">
+            <div className="card-header flex items-center justify-between">
+              <h3 className="font-semibold" style={{ fontSize: "0.95rem" }}>
+                {currentUserRole === "ADMIN" ? "Team Workload" : "Your Queue"}
+              </h3>
+              <Badge variant="info">
+                {currentUserRole === "ADMIN" 
+                  ? projects.reduce((acc, p) => acc + p.pages.filter((pg: any) => pg.assigneeId).length, 0)
+                  : projects.reduce((acc, p) => acc + p.pages.filter((pg: any) => pg.assigneeId === currentUserId && pg.qaStatus !== "APPROVED").length, 0)
+                }
+              </Badge>
+            </div>
+            <div className="card-body" style={{ padding: 0, maxHeight: "400px", overflowY: "auto" }}>
+              {currentUserRole === "ADMIN" ? (
+                /* ADMIN VIEW: Who is working on what */
+                <div className="flex flex-col">
+                  {projects.flatMap(p => p.pages.filter((pg: any) => pg.assigneeId).map((pg: any) => ({ ...pg, projectName: p.name, projectId: p.id })))
+                    .length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted">No one is currently assigned to tasks</div>
+                  ) : (
+                    projects.flatMap(p => p.pages.filter((pg: any) => pg.assigneeId).map((pg: any) => ({ ...pg, projectName: p.name, projectId: p.id })))
+                      .map((assignment: any, idx) => (
+                      <div key={idx} className="p-3 border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-elevated)] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[var(--color-primary-subtle)] text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">
+                            {assignment.assignee.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium truncate">{assignment.assignee.name}</div>
+                            <div className="text-xs text-muted truncate">{assignment.name} @ {assignment.projectName}</div>
+                          </div>
+                          <Badge variant={assignment.devStatus === "COMPLETED" ? "success" : "warning"} size="sm">
+                            {assignment.devStatus.replace("_", " ")}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                /* INDIVIDUAL VIEW: Project Queue */
+                <div className="flex flex-col">
+                  {projects.flatMap(p => p.pages.filter((pg: any) => pg.assigneeId === currentUserId && pg.qaStatus !== "APPROVED").map((pg: any) => ({ ...pg, projectName: p.name, projectId: p.id })))
+                    .length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted">Your queue is empty! Great job.</div>
+                  ) : (
+                    projects.flatMap(p => p.pages.filter((pg: any) => pg.assigneeId === currentUserId && pg.qaStatus !== "APPROVED").map((pg: any) => ({ ...pg, projectName: p.name, projectId: p.id })))
+                      .map((task: any, idx) => (
+                      <Link key={idx} href={`/projects/${task.projectId}`} className="p-3 border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-elevated)] transition-colors block">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium truncate">{task.projectName}</span>
+                          <span className="text-xs text-muted">{task.type}</span>
+                        </div>
+                        <div className="text-xs text-secondary truncate">{task.name}</div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="flex gap-1">
+                            <Badge variant="muted" size="sm">{task.designStatus}</Badge>
+                            <Badge variant="info" size="sm">{task.devStatus}</Badge>
+                          </div>
+                          <ArrowRight size={12} className="text-muted" />
+                        </div>
+                      </Link>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="card-body" style={{ padding: 0, maxHeight: "500px", overflowY: "auto" }}>
-            {activities.length === 0 ? (
-              <div className="p-4 text-sm text-muted" style={{ textAlign: "center" }}>
-                No recent activity
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {activities.map((activity) => (
-                  <Link
-                    key={activity.id}
-                    href={`/projects/${activity.projectId}`}
-                    className="notification-item"
-                  >
-                    <span style={{ fontSize: "1.1rem" }}>{getActivityIcon(activity.action)}</span>
-                    <div className="notification-content">
-                      <div className="notification-title">
-                        {activity.user?.name}
+
+          <div className="card">
+            <div className="card-header">
+              <h3 className="font-semibold" style={{ fontSize: "0.95rem" }}>Recent Activity</h3>
+            </div>
+            <div className="card-body" style={{ padding: 0, maxHeight: "500px", overflowY: "auto" }}>
+              {activities.length === 0 ? (
+                <div className="p-4 text-sm text-muted" style={{ textAlign: "center" }}>
+                  No recent activity
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {activities.map((activity) => (
+                    <Link
+                      key={activity.id}
+                      href={`/projects/${activity.projectId}`}
+                      className="notification-item"
+                    >
+                      <span style={{ fontSize: "1.1rem" }}>{getActivityIcon(activity.action)}</span>
+                      <div className="notification-content">
+                        <div className="notification-title">
+                          {activity.user?.name}
+                        </div>
+                        <div className="notification-msg">
+                          {activity.details || activity.action.replace(/_/g, " ")}
+                        </div>
+                        <div className="notification-time">
+                          {formatRelativeTime(activity.createdAt)}
+                          {activity.project && (
+                            <> · {activity.project.name}</>
+                          )}
+                        </div>
                       </div>
-                      <div className="notification-msg">
-                        {activity.details || activity.action.replace(/_/g, " ")}
-                      </div>
-                      <div className="notification-time">
-                        {formatRelativeTime(activity.createdAt)}
-                        {activity.project && (
-                          <> · {activity.project.name}</>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

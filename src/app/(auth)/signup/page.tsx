@@ -10,18 +10,27 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const [success, setSuccess] = useState(false)
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     
-    // In a real app we'd call an API here. 
-    // Since we seeded our demo users, we'll just show an error indicating 
-    // registration is closed or mock it out.
-    setTimeout(() => {
-      setError("Registration is currently invite-only. Please use a demo account.")
+    const formData = new FormData(e.currentTarget)
+    
+    try {
+      const { signup } = await import("@/actions/auth")
+      await signup(formData)
+      setSuccess(true)
+      setTimeout(() => {
+        router.push("/login")
+      }, 3000)
+    } catch (err: any) {
+      setError(err.message || "Something went wrong")
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -41,6 +50,12 @@ export default function SignupPage() {
           {error && (
             <div className="p-3 bg-[var(--color-danger-subtle)] text-[var(--color-danger)] text-sm rounded-md border border-[var(--color-danger)]">
               {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="p-3 bg-[var(--color-success-subtle)] text-[var(--color-success)] text-sm rounded-md border border-[var(--color-success)]">
+              Account created! Waiting for admin approval. Redirecting to login...
             </div>
           )}
           

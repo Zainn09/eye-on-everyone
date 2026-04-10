@@ -77,7 +77,7 @@ export default function NewProjectPage() {
               <span className="form-hint">Minimum 10 characters</span>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div className="form-group">
                 <Label>Priority</Label>
                 <select name="priority" className="select" defaultValue="MEDIUM">
@@ -95,25 +95,6 @@ export default function NewProjectPage() {
                   required
                   min={new Date().toISOString().split("T")[0]}
                 />
-              </div>
-              <div className="form-group">
-                <Label>Design QA</Label>
-                <div style={{ paddingTop: "0.35rem" }}>
-                  <label className="toggle" style={{ gap: "0.75rem" }}>
-                    <input type="hidden" name="designQAEnabled" value="false" />
-                    <input
-                      type="checkbox"
-                      name="designQAEnabled"
-                      className="toggle-input"
-                      defaultChecked
-                      value="true"
-                    />
-                    <span className="toggle-track">
-                      <span className="toggle-thumb" />
-                    </span>
-                    <span className="text-sm text-secondary">Enable QA Phase</span>
-                  </label>
-                </div>
               </div>
             </div>
           </div>

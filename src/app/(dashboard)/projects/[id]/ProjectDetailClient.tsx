@@ -7,10 +7,10 @@ import {
   ArrowLeft, ArrowRight, CheckCircle2, Clock, FileText,
   MessageSquare, Plus, Trash2, ExternalLink, GitBranch,
   Calendar, User, AlertTriangle, RefreshCw, Send, Check,
-  X, ChevronRight
+  X, ChevronRight, Palette, ThumbsUp, Code, Bug, Monitor, Rocket
 } from "lucide-react"
 import { Badge, Button, Input, Label, Textarea, Modal } from "@/components/ui"
-import { moveProjectPhase, deleteProject } from "@/actions/projects"
+import { moveProjectPhase, deleteProject, updateProjectDeadline } from "@/actions/projects"
 import { addPage, updatePage, deletePage, assignPage } from "@/actions/pages"
 import { addComment, createRevision, resolveRevision } from "@/actions/misc"
 import {
@@ -35,6 +35,17 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
   const [showAddRevision, setShowAddRevision] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [commentText, setCommentText] = useState("")
+  const [isCopied, setIsCopied] = useState(false)
+  const [showEditDeadline, setShowEditDeadline] = useState(false)
+
+  async function handleUpdateDeadline(deadline: string) {
+    if (currentUser.role !== "ADMIN") return
+    startTransition(async () => {
+      await updateProjectDeadline(project.id, deadline)
+      setShowEditDeadline(false)
+      router.refresh()
+    })
+  }
 
   const progress = calculateProjectProgress(project)
   const daysLeft = getDaysUntilDeadline(project.deadline)
@@ -114,6 +125,13 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
     })
   }
 
+  function handleCopyShareLink() {
+    const url = `${window.location.origin}/share/${project.shareToken}`;
+    navigator.clipboard.writeText(url);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  }
+
   const tabs = [
     { id: "overview", label: "Overview", icon: FileText },
     { id: "pages", label: "Pages", icon: FileText, count: project.pages.length },
@@ -151,6 +169,21 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
         </div>
 
         <div className="flex items-center gap-2">
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={handleCopyShareLink}
+            style={{ 
+              background: isCopied ? "rgba(16, 185, 129, 0.15)" : "var(--color-bg-elevated)", 
+              color: isCopied ? "#34d399" : "var(--color-text)",
+              borderColor: isCopied ? "rgba(16, 185, 129, 0.3)" : "var(--color-border)",
+              transition: "all 0.2s"
+            }}
+          >
+            {isCopied ? <Check size={14} /> : <ExternalLink size={14} />}
+            {isCopied ? "Copied!" : "Share Link"}
+          </Button>
+
           {nextPhases.map((phase) => (
             <Button
               key={phase}
@@ -171,37 +204,78 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
         </div>
       </div>
 
-      {/* Workflow Stepper */}
-      <div className="card mb-6">
-        <div className="card-body" style={{ padding: "1.25rem 1.5rem" }}>
-          <div className="workflow-stepper">
-            {PHASES_ORDER.map((phase, i) => {
-              const isCompleted = PHASES_ORDER.indexOf(project.currentPhase) > i
-              const isActive = project.currentPhase === phase
-              const color = getPhaseColor(phase)
+      {/* Workflow Stepper Flowchart */}
+      <div className="card mb-6" style={{ background: "linear-gradient(180deg, rgba(22,22,31,0.6), rgba(10,10,15,0.9))", borderColor: "rgba(139,92,246,0.3)" }}>
+        <div className="card-body" style={{ padding: "1.5rem" }}>
+          <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <GitBranch className="text-primary" size={20} />
+            <h2 style={{ fontSize: "1.125rem", fontWeight: 600 }}>Project Flowchart</h2>
+          </div>
+          <div className="workflow-stepper no-scrollbar" style={{ padding: "0.5rem 0 1rem 0", overflowX: "auto", display: 'flex', gap: '0.5rem' }}>
+            {PHASES_ORDER.map((phase, idx, arr) => {
+              const currentIdx = arr.findIndex(p => p === project.currentPhase);
+              const isSkipped = !project.designQAEnabled && phase === "DESIGN_QA";
+              const isPastPhase = currentIdx > idx || project.status === "COMPLETED";
+              const isCompleted = isPastPhase && !isSkipped;
+              const isActive = currentIdx === idx && project.status !== "COMPLETED" && !isSkipped;
+              
+              let color = "#6b7280"; 
+              let bgColor = "rgba(107, 114, 128, 0.1)";
+              if (isSkipped) { 
+                color = "#ef4444"; 
+                bgColor = "rgba(239, 68, 68, 0.1)"; 
+              }
+              else if (isCompleted) { color = "#10b981"; bgColor = "rgba(16, 185, 129, 0.15)"; }
+              else if (isActive) { color = "#8b5cf6"; bgColor = "rgba(139, 92, 246, 0.25)"; }
 
-              if (!project.designQAEnabled && phase === "DESIGN_QA") return null
+              const getIconForPhase = (p: string) => {
+                switch(p) {
+                  case 'DESIGN': return <Palette size={18} />
+                  case 'DESIGN_QA': return <CheckCircle2 size={18} />
+                  case 'DESIGN_APPROVAL': return <ThumbsUp size={18} />
+                  case 'DEVELOPMENT': return <Code size={18} />
+                  case 'DEV_QA': return <Bug size={18} />
+                  case 'CLIENT_PREVIEW': return <Monitor size={18} />
+                  case 'DELIVERED': return <Rocket size={18} />
+                  default: return <Check size={18} />
+                }
+              }
 
               return (
-                <div key={phase} style={{ display: "contents" }}>
-                  {i > 0 && (
-                    <div
-                      className={`workflow-step-connector ${isCompleted ? "completed" : ""}`}
-                      style={isCompleted ? { background: color } : {}}
-                    />
-                  )}
-                  <div className="workflow-step">
-                    <div
-                      className={`workflow-step-dot ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
-                      style={isActive ? { borderColor: color, background: `${color}20`, color } : isCompleted ? { borderColor: color, background: `${color}20`, color } : {}}
+                <div key={phase} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "7.5rem", position: "relative" }}>
+                    <div 
+                      style={{ 
+                        width: "3.5rem", height: "3.5rem", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center", border: isSkipped ? "2px solid" : "2px solid", zIndex: 10,
+                        borderColor: color, 
+                        backgroundColor: bgColor,
+                        color: color,
+                        boxShadow: isActive ? `0 0 24px ${color}80` : 'none',
+                        transition: "all 0.3s ease-in-out",
+                        transform: isActive ? "scale(1.05)" : "scale(1)",
+                        opacity: isSkipped ? 0.8 : 1
+                      }}
                     >
-                      {isCompleted ? <Check size={14} /> : i + 1}
+                      {getIconForPhase(phase)}
                     </div>
-                    <span className={`workflow-step-label ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
-                      style={isActive ? { color } : {}}>
-                      {getPhaseLabel(phase)}
-                    </span>
+                    <div style={{ textAlign: "center", opacity: isSkipped ? 1 : 1 }}>
+                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isSkipped ? '#ef4444' : (isActive || isCompleted ? '#f1f0ff' : '#6b7280') }}>
+                        {isSkipped ? "QA Skipped" : getPhaseLabel(phase)}
+                      </div>
+                      <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "0.35rem", color, transition: "color 0.3s" }}>
+                        {isSkipped ? "SKIPPED" : isCompleted ? "Done" : isActive ? "Active" : "Pending"}
+                      </div>
+                    </div>
                   </div>
+                  
+                  {idx < arr.length - 1 && (
+                    <div style={{ 
+                      width: "3rem", height: "3px", flexShrink: 0, marginTop: "-2.85rem", borderRadius: "9999px",
+                      background: isPastPhase ? "linear-gradient(90deg, #10b981, rgba(16, 185, 129, 0.3))" : "#32324a",
+                      transition: "background 0.5s",
+                      opacity: isSkipped ? 0.6 : 1
+                    }} />
+                  )}
                 </div>
               )
             })}
@@ -291,17 +365,26 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
               </p>
               <div className="divider" style={{ margin: "1.25rem 0" }} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Deadline</span>
-                  <span className="text-sm font-medium">{formatDate(project.deadline)}</span>
-                </div>
-                <div>
-                  <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Design QA</span>
-                  <span className="text-sm font-medium">{project.designQAEnabled ? "Enabled" : "Disabled"}</span>
-                </div>
-                <div>
-                  <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Share Token</span>
-                  <code className="text-xs" style={{ color: "var(--color-primary-light)" }}>{project.shareToken}</code>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Deadline</span>
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      {formatDate(project.deadline)}
+                      {currentUser.role === "ADMIN" && (
+                        <button 
+                          className="btn btn-ghost btn-icon btn-xs" 
+                          onClick={() => setShowEditDeadline(true)}
+                          title="Change deadline"
+                        >
+                          <Calendar size={12} />
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Share Token</span>
+                    <code className="text-xs" style={{ color: "var(--color-primary-light)" }}>{project.shareToken}</code>
+                  </div>
                 </div>
                 <div>
                   <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Last Updated</span>
@@ -707,6 +790,33 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
             <Trash2 size={14} /> Delete Project
           </Button>
         </div>
+      </Modal>
+      {/* Edit Deadline Modal */}
+      <Modal isOpen={showEditDeadline} onClose={() => setShowEditDeadline(false)} title="Change Deadline" size="sm">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          handleUpdateDeadline(formData.get("deadline") as string);
+        }}>
+          <div className="modal-body">
+            <div className="form-group">
+              <Label>New Deadline</Label>
+              <Input 
+                name="deadline" 
+                type="date" 
+                required 
+                defaultValue={new Date(project.deadline).toISOString().split('T')[0]} 
+              />
+            </div>
+            <p className="text-xs text-muted mt-2">
+              Only administrators can change the project deadline.
+            </p>
+          </div>
+          <div className="modal-footer">
+            <Button type="button" variant="ghost" onClick={() => setShowEditDeadline(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" disabled={isPending}>Update Deadline</Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

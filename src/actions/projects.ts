@@ -29,7 +29,7 @@ export async function createProject(formData: FormData) {
     brief: formData.get("brief"),
     priority: formData.get("priority"),
     deadline: formData.get("deadline"),
-    designQAEnabled: formData.get("designQAEnabled") === "true",
+    designQAEnabled: true, // Always enabled by default, option removed from UI
   })
 
   const project = await prisma.project.create({
@@ -79,7 +79,7 @@ export async function updateProject(projectId: string, formData: FormData) {
     brief: formData.get("brief"),
     priority: formData.get("priority"),
     deadline: formData.get("deadline"),
-    designQAEnabled: formData.get("designQAEnabled") === "true",
+    designQAEnabled: true,
   })
 
   await prisma.project.update({
@@ -107,6 +107,29 @@ export async function deleteProject(projectId: string) {
   await prisma.project.delete({ where: { id: projectId } })
   revalidatePath("/dashboard")
   redirect("/dashboard")
+}
+
+export async function updateProjectDeadline(projectId: string, deadline: string) {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+  if (session.user.role !== "ADMIN") throw new Error("Only admins can change the deadline")
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { deadline: new Date(deadline) },
+  })
+
+  await prisma.activity.create({
+    data: {
+      action: "deadline_changed",
+      details: `Deadline changed to ${deadline}`,
+      userId: session.user.id,
+      projectId,
+    },
+  })
+
+  revalidatePath(`/projects/${projectId}`)
+  revalidatePath("/dashboard")
 }
 
 export async function moveProjectPhase(

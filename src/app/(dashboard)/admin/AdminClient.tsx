@@ -1,9 +1,9 @@
 "use client"
 
 import { useTransition } from "react"
-import { Shield, ShieldAlert, UserCog } from "lucide-react"
+import { Shield, ShieldAlert, UserCog, UserCheck } from "lucide-react"
 import { updateUserRole } from "@/actions/misc"
-import { Badge } from "@/components/ui"
+import { Badge, Button } from "@/components/ui"
 import { useRouter } from "next/navigation"
 
 interface AdminClientProps {
@@ -31,16 +31,16 @@ export function AdminClient({ users }: AdminClientProps) {
   }
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: "800px" }}>
+    <div className="animate-fade-in space-y-8" style={{ maxWidth: "1000px" }}>
       <div className="page-header">
         <h1>Team Management</h1>
-        <p>Manage access levels and roles for your workspace team members</p>
+        <p>Manage access levels and assign roles to team members</p>
       </div>
 
       <div className="card">
         <div className="card-header border-b border-[var(--color-border)]">
           <div className="flex items-center gap-2 font-semibold">
-            <UserCog size={18} className="text-primary" /> 
+            <UserCheck size={18} className="text-success" /> 
             Team Members ({users.length})
           </div>
         </div>
@@ -53,7 +53,7 @@ export function AdminClient({ users }: AdminClientProps) {
           
           <div className="flex flex-col">
             {users.map(user => (
-              <div key={user.id} className="grid grid-cols-4 gap-4 px-6 py-4 items-center border-b border-[var(--color-border)]">
+              <div key={user.id} className="grid grid-cols-4 gap-4 px-6 py-4 items-center border-b border-[var(--color-border)] last:border-0">
                 <div className="col-span-2 flex flex-col">
                   <span className="font-medium text-sm">{user.name}</span>
                   <span className="text-xs text-muted">{user.email}</span>
