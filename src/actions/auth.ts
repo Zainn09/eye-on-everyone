@@ -26,9 +26,9 @@ export async function login(formData: FormData) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Invalid credentials" }
+          return { error: "Invalid email or password." }
         default:
-          return { error: "Something went wrong" }
+          return { error: "Something went wrong. Please try again." }
       }
     }
     throw error
@@ -41,7 +41,11 @@ export async function signup(formData: FormData) {
   const password = formData.get("password") as string
 
   if (!name || !email || !password) {
-    throw new Error("Missing required fields")
+    throw new Error("All fields are required.")
+  }
+
+  if (password.length < 6) {
+    throw new Error("Password must be at least 6 characters.")
   }
 
   const existingUser = await prisma.user.findUnique({
@@ -49,7 +53,7 @@ export async function signup(formData: FormData) {
   })
 
   if (existingUser) {
-    throw new Error("User already exists")
+    throw new Error("An account with this email already exists.")
   }
 
   const hashedPassword = await bcrypt.hash(password, 10)
@@ -60,19 +64,20 @@ export async function signup(formData: FormData) {
       email,
       password: hashedPassword,
       role: "VIEWER",
+      status: "PENDING_APPROVAL",
     },
   })
 
-  // Create a notification for admins
+  // Notify all admins about the pending registration
   const admins = await prisma.user.findMany({
-    where: { role: "ADMIN" },
+    where: { role: "ADMIN", status: "ACTIVE" },
   })
 
   for (const admin of admins) {
     await prisma.notification.create({
       data: {
         title: "New User Registration",
-        message: `${name} has registered a new account.`,
+        message: `${name} (${email}) is requesting access. Review in Admin panel.`,
         userId: admin.id,
         link: "/admin",
       },

@@ -11,56 +11,61 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@projectmanager.com" },
-    update: {},
+    update: { status: "ACTIVE" },
     create: {
       name: "Alex Admin",
       email: "admin@projectmanager.com",
       password: hashedPassword,
       role: "ADMIN",
+      status: "ACTIVE",
     },
   })
 
   const pm = await prisma.user.upsert({
     where: { email: "pm@projectmanager.com" },
-    update: {},
+    update: { status: "ACTIVE" },
     create: {
       name: "Sara Manager",
       email: "pm@projectmanager.com",
       password: hashedPassword,
       role: "PROJECT_MANAGER",
+      status: "ACTIVE",
     },
   })
 
   const designer = await prisma.user.upsert({
     where: { email: "designer@projectmanager.com" },
-    update: {},
+    update: { status: "ACTIVE" },
     create: {
       name: "David Designer",
       email: "designer@projectmanager.com",
       password: hashedPassword,
       role: "DESIGNER",
+      status: "ACTIVE",
     },
   })
 
   const developer = await prisma.user.upsert({
     where: { email: "dev@projectmanager.com" },
-    update: {},
+    update: { status: "ACTIVE" },
     create: {
       name: "Emma Developer",
       email: "dev@projectmanager.com",
       password: hashedPassword,
       role: "DEVELOPER",
+      status: "ACTIVE",
     },
   })
 
   const qa = await prisma.user.upsert({
     where: { email: "qa@projectmanager.com" },
-    update: {},
+    update: { status: "ACTIVE" },
     create: {
       name: "Quinn QA",
       email: "qa@projectmanager.com",
       password: hashedPassword,
       role: "QA",
+      status: "ACTIVE",
     },
   })
 

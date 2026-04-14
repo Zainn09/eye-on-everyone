@@ -17,6 +17,7 @@ model User {
   email         String    @unique
   password      String    // bcrypt hashed
   role          String    @default("VIEWER") // "ADMIN", "PROJECT_MANAGER", "DESIGNER", "DEVELOPER", "QA", "VIEWER"
+  status        String    @default("ACTIVE") // "PENDING_APPROVAL", "ACTIVE", "REJECTED"
   avatar        String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -40,6 +41,7 @@ model Project {
   status        String    @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED", "BLOCKED", "ON_HOLD"
   currentPhase  String    @default("DESIGN") // "DESIGN", "DESIGN_QA", "DESIGN_APPROVAL", "DEVELOPMENT", "DEV_QA", "CLIENT_PREVIEW", "DELIVERED"
   designQAEnabled Boolean @default(true)
+  skippedDesignQA Boolean @default(false)
   shareToken    String    @unique @default(cuid())
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

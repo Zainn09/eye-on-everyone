@@ -38,7 +38,6 @@ export async function addComment(formData: FormData) {
       },
     })
 
-    // Notify project team about comment
     const project = await prisma.project.findUnique({
       where: { id: projectId },
       select: { name: true, creatorId: true },
@@ -99,7 +98,6 @@ export async function createRevision(formData: FormData) {
   const description = formData.get("description") as string
   const type = formData.get("type") as string
 
-  // Get next version number
   const lastRevision = await prisma.revision.findFirst({
     where: { projectId },
     orderBy: { version: "desc" },
@@ -158,13 +156,39 @@ export async function resolveRevision(revisionId: string) {
   revalidatePath(`/projects/${revision.projectId}`)
 }
 
+// Only returns ACTIVE users (for task assignment dropdowns)
 export async function getUsers() {
   const session = await auth()
   if (!session?.user?.id) return []
 
   return prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true },
+    where: { status: "ACTIVE" },
+    select: { id: true, name: true, email: true, role: true, status: true },
     orderBy: { createdAt: "desc" },
+  })
+}
+
+// Returns all users with any status (for admin panel)
+export async function getAllUsers() {
+  const session = await auth()
+  if (!session?.user?.id) return []
+  if (session.user.role !== "ADMIN") throw new Error("Forbidden")
+
+  return prisma.user.findMany({
+    select: { id: true, name: true, email: true, role: true, status: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+// Returns only pending users
+export async function getPendingUsers() {
+  const session = await auth()
+  if (!session?.user?.id) return []
+
+  return prisma.user.findMany({
+    where: { status: "PENDING_APPROVAL" },
+    select: { id: true, name: true, email: true, role: true, status: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
   })
 }
 
@@ -177,6 +201,43 @@ export async function updateUserRole(userId: string, role: string) {
     where: { id: userId },
     data: { role },
   })
+  revalidatePath("/admin")
+}
+
+export async function approveUser(userId: string, role: string) {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+  if (session.user.role !== "ADMIN") throw new Error("Forbidden")
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { status: "ACTIVE", role: role || "VIEWER" },
+  })
+
+  // Notify the approved user
+  await prisma.notification.create({
+    data: {
+      title: "Account Approved",
+      message: `Your account has been approved! You can now log in as ${role.replace("_", " ")}.`,
+      userId: user.id,
+      link: "/login",
+    },
+  })
+
+  revalidatePath("/admin")
+  return user
+}
+
+export async function rejectUser(userId: string) {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+  if (session.user.role !== "ADMIN") throw new Error("Forbidden")
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { status: "REJECTED" },
+  })
+
   revalidatePath("/admin")
 }
 

@@ -42,7 +42,7 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
   const nextPhases = getNextPhases(
     project.currentPhase as Phase,
     currentUser.role as UserRole,
-    true
+    project.designQAEnabled
   )
 
   function handleMovePhase(newPhase: Phase) {
@@ -137,6 +137,42 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
 
   return (
     <div className="animate-fade-in">
+      {/* Neon Red Banner: Skipped QA */}
+      {project.skippedDesignQA && (
+        <div
+          className="qa-skipped-banner"
+          style={{
+            marginBottom: "1rem",
+            padding: "0.75rem 1.25rem",
+            borderRadius: "var(--radius-md)",
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            animation: "neon-pulse-red 2s ease-in-out infinite",
+            boxShadow: "0 0 16px rgba(239,68,68,0.25), inset 0 0 16px rgba(239,68,68,0.04)",
+          }}
+        >
+          <div style={{
+            width: "32px", height: "32px", borderRadius: "50%",
+            background: "rgba(239,68,68,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <AlertTriangle size={16} style={{ color: "#f87171" }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#f87171" }}>
+              ⚠ Design QA Skipped
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "rgba(248,113,113,0.8)", marginTop: "0.125rem" }}>
+              This project moved directly from Design to Client Approval without passing through Design QA.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Back + Title */}
       <Link href="/dashboard" className="btn btn-ghost btn-sm mb-4" style={{ gap: "0.35rem" }}>
         <ArrowLeft size={16} /> Back
@@ -204,14 +240,16 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
           <div className="workflow-stepper no-scrollbar" style={{ padding: "0.5rem 0 1rem 0", overflowX: "auto", display: 'flex', gap: '0.5rem' }}>
             {PHASES_ORDER.map((phase, idx, arr) => {
               const currentIdx = arr.findIndex(p => p === project.currentPhase);
-              const isSkipped = false;
+              // A phase is "QA skipped" if it's DESIGN_QA and the project has skippedDesignQA flag
+              const isQASkipped = phase === "DESIGN_QA" && project.skippedDesignQA;
               const isPastPhase = currentIdx > idx || project.status === "COMPLETED";
-              const isCompleted = isPastPhase && !isSkipped;
-              const isActive = currentIdx === idx && project.status !== "COMPLETED" && !isSkipped;
+              // QA skipped phase is neither completed nor active — it's specially marked
+              const isCompleted = isPastPhase && !isQASkipped;
+              const isActive = currentIdx === idx && project.status !== "COMPLETED" && !isQASkipped;
               
               let color = "#6b7280"; 
               let bgColor = "rgba(107, 114, 128, 0.1)";
-              if (isSkipped) { color = "#4b5563"; bgColor = "transparent"; }
+              if (isQASkipped) { color = "#ef4444"; bgColor = "rgba(239,68,68,0.1)"; }
               else if (isCompleted) { color = "#10b981"; bgColor = "rgba(16, 185, 129, 0.15)"; }
               else if (isActive) { color = "#8b5cf6"; bgColor = "rgba(139, 92, 246, 0.25)"; }
 
@@ -233,24 +271,26 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "7.5rem", position: "relative" }}>
                     <div 
                       style={{ 
-                        width: "3.5rem", height: "3.5rem", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center", border: isSkipped ? "2px dashed" : "2px solid", zIndex: 10,
+                        width: "3.5rem", height: "3.5rem", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center",
+                        border: isQASkipped ? "2px dashed" : "2px solid",
+                        zIndex: 10,
                         borderColor: color, 
                         backgroundColor: bgColor,
                         color: color,
-                        boxShadow: isActive ? `0 0 24px ${color}80` : 'none',
+                        boxShadow: isActive ? `0 0 24px ${color}80` : isQASkipped ? "0 0 16px rgba(239,68,68,0.5)" : "none",
                         transition: "all 0.3s ease-in-out",
                         transform: isActive ? "scale(1.05)" : "scale(1)",
-                        opacity: isSkipped ? 0.5 : 1
+                        animation: isQASkipped ? "neon-pulse-red 2s ease-in-out infinite" : "none",
                       }}
                     >
-                      {getIconForPhase(phase)}
+                      {isQASkipped ? <X size={18} /> : getIconForPhase(phase)}
                     </div>
-                    <div style={{ textAlign: "center", opacity: isSkipped ? 0.6 : 1 }}>
-                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isActive || isCompleted ? '#f1f0ff' : '#6b7280', textDecoration: isSkipped ? 'line-through' : 'none' }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isQASkipped ? "#f87171" : isActive || isCompleted ? '#f1f0ff' : '#6b7280' }}>
                         {getPhaseLabel(phase)}
                       </div>
                       <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "0.35rem", color, transition: "color 0.3s" }}>
-                        {isCompleted ? "Done" : isActive ? "Active" : "Pending"}
+                        {isQASkipped ? "Skipped" : isCompleted ? "Done" : isActive ? "Active" : "Pending"}
                       </div>
                     </div>
                   </div>
@@ -258,9 +298,12 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
                   {idx < arr.length - 1 && (
                     <div style={{ 
                       width: "3rem", height: "3px", flexShrink: 0, marginTop: "-2.85rem", borderRadius: "9999px",
-                      background: isPastPhase ? "linear-gradient(90deg, #10b981, rgba(16, 185, 129, 0.3))" : "#32324a",
+                      background: isQASkipped
+                        ? "linear-gradient(90deg, rgba(239,68,68,0.6), rgba(239,68,68,0.1))"
+                        : isPastPhase
+                        ? "linear-gradient(90deg, #10b981, rgba(16, 185, 129, 0.3))"
+                        : "#32324a",
                       transition: "background 0.5s",
-                      opacity: isSkipped ? 0.6 : 1
                     }} />
                   )}
                 </div>

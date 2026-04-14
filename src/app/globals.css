@@ -981,3 +981,40 @@ textarea.input { resize: vertical; min-height: 80px; }
 @media (max-width: 768px) {
   .sidebar-overlay.open { display: block; }
 }
+
+/* ===== NEON RED — QA SKIPPED GLOW ===== */
+@keyframes neon-pulse-red {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(239,68,68,0.4),
+      0 0 16px rgba(239,68,68,0.25),
+      0 0 32px rgba(239,68,68,0.12);
+    border-color: rgba(239,68,68,0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 12px rgba(239,68,68,0.7),
+      0 0 28px rgba(239,68,68,0.45),
+      0 0 48px rgba(239,68,68,0.25);
+    border-color: rgba(239,68,68,0.8);
+  }
+}
+
+/* Applied to project cards with skipped Design QA */
+.qa-skipped-glow {
+  border-color: rgba(239,68,68,0.45) !important;
+  animation: neon-pulse-red 2.5s ease-in-out infinite;
+}
+
+.qa-skipped-glow:hover {
+  animation: neon-pulse-red 1.5s ease-in-out infinite;
+}
+
+/* Button variant for success (used in admin panel approve) */
+.btn-success {
+  background: var(--color-success);
+  color: #fff;
+  border-color: var(--color-success);
+}
+.btn-success:hover { background: #059669; box-shadow: 0 0 12px rgba(16,185,129,0.3); }
+

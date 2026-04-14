@@ -33,7 +33,9 @@ export async function createProject(formData: FormData) {
   const project = await prisma.project.create({
     data: {
       ...validated,
+      // Always enabled by default — QA can still be used from project detail
       designQAEnabled: true,
+      skippedDesignQA: false,
       deadline: new Date(validated.deadline),
       creatorId: session.user.id,
       status: "NOT_STARTED",
@@ -52,7 +54,7 @@ export async function createProject(formData: FormData) {
 
   // Notify all admins/PMs
   const managers = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "PROJECT_MANAGER"] } },
+    where: { role: { in: ["ADMIN", "PROJECT_MANAGER"] }, status: "ACTIVE" },
   })
   await prisma.notification.createMany({
     data: managers
@@ -120,30 +122,41 @@ export async function moveProjectPhase(
   })
   if (!project) throw new Error("Project not found")
 
+  // Use actual project designQAEnabled setting (not hardcoded)
   const canMove = canTransition(
     project.currentPhase as Phase,
     newPhase,
     session.user.role as any,
-    true
+    project.designQAEnabled
   )
   if (!canMove) throw new Error("Transition not allowed")
 
   const previousPhase = project.currentPhase
 
-  // Update status based on phase
+  // Detect if Design QA was skipped: going from DESIGN directly to DESIGN_APPROVAL
+  const skippedQA =
+    previousPhase === "DESIGN" && newPhase === "DESIGN_APPROVAL"
+
+  // Update status based on new phase
   let status = project.status
   if (newPhase === "DELIVERED") status = "COMPLETED"
   else if (newPhase !== "DESIGN") status = "IN_PROGRESS"
 
   await prisma.project.update({
     where: { id: projectId },
-    data: { currentPhase: newPhase, status, updatedAt: new Date() },
+    data: {
+      currentPhase: newPhase,
+      status,
+      updatedAt: new Date(),
+      // Mark skipped QA — once skipped it stays marked
+      ...(skippedQA ? { skippedDesignQA: true } : {}),
+    },
   })
 
   await prisma.activity.create({
     data: {
       action: "phase_changed",
-      details: `Moved from ${previousPhase} to ${newPhase}${note ? `: ${note}` : ""}`,
+      details: `Moved from ${previousPhase} to ${newPhase}${skippedQA ? " (Design QA skipped)" : ""}${note ? `: ${note}` : ""}`,
       userId: session.user.id,
       projectId,
     },
@@ -162,14 +175,16 @@ export async function moveProjectPhase(
   const rolesToNotify = notifyRoles[newPhase] || []
   if (rolesToNotify.length > 0) {
     const users = await prisma.user.findMany({
-      where: { role: { in: rolesToNotify } },
+      where: { role: { in: rolesToNotify }, status: "ACTIVE" },
     })
     await prisma.notification.createMany({
       data: users
         .filter((u) => u.id !== session.user.id)
         .map((u) => ({
-          title: "Project Phase Updated",
-          message: `"${project.name}" moved to ${newPhase.replace("_", " ")}`,
+          title: skippedQA ? "⚠️ QA Skipped — Client Approval" : "Project Phase Updated",
+          message: skippedQA
+            ? `"${project.name}" moved to Client Approval (Design QA was skipped)`
+            : `"${project.name}" moved to ${newPhase.replace(/_/g, " ")}`,
           userId: u.id,
           link: `/projects/${projectId}`,
         })),

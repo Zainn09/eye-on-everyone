@@ -350,13 +350,16 @@ export function DashboardClient({ projects, activities, stats, userName, current
                 return (
                   <Link key={project.id} href={`/projects/${project.id}`}>
                     <div
-                      className="project-card"
+                      className={`project-card${project.skippedDesignQA ? ' qa-skipped-glow' : ''}`}
                       style={{ "--phase-color": phaseColor } as any}
                     >
                       <div
                         style={{
                           position: "absolute", top: 0, left: 0, right: 0,
-                          height: "3px", background: phaseColor
+                          height: "3px",
+                          background: project.skippedDesignQA
+                            ? "linear-gradient(90deg, #ef4444, #f87171, #ef4444)"
+                            : phaseColor
                         }}
                       />
                       <div className="project-card-header">
@@ -364,9 +367,24 @@ export function DashboardClient({ projects, activities, stats, userName, current
                           <div className="project-card-title">{project.name}</div>
                           <div className="project-card-client">{project.clientName}</div>
                         </div>
-                        <Badge variant={getPriorityVariant(project.priority)}>
-                          {project.priority}
-                        </Badge>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.35rem" }}>
+                          <Badge variant={getPriorityVariant(project.priority)}>
+                            {project.priority}
+                          </Badge>
+                          {project.skippedDesignQA && (
+                            <span style={{
+                              fontSize: "0.65rem", fontWeight: 700,
+                              background: "rgba(239,68,68,0.15)",
+                              color: "#f87171",
+                              border: "1px solid rgba(239,68,68,0.3)",
+                              padding: "0.1rem 0.45rem",
+                              borderRadius: "9999px",
+                              letterSpacing: "0.03em",
+                            }}>
+                              ⚠ QA Skipped
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
