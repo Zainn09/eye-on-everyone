@@ -1,41 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button, Input, Label } from "@/components/ui"
+import { login } from "@/actions/auth"
 
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function clientAction(formData: FormData) {
     setLoading(true)
     setError(null)
-    
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-    
-    try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
-      
-      if (res?.error) {
-        setError("Invalid email or password")
-      } else {
-        router.push("/dashboard")
-        router.refresh()
-      }
-    } catch (err) {
-      setError("An unexpected error occurred")
-    } finally {
+    const result = await login(formData)
+    if (result?.error) {
+      setError(result.error)
       setLoading(false)
     }
   }
@@ -53,7 +34,7 @@ export default function LoginPage() {
           <p className="text-muted text-sm mt-1">Sign in to your account to continue</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form action={clientAction} className="auth-form">
           {error && (
             <div className="p-3 bg-[var(--color-danger-subtle)] text-[var(--color-danger)] text-sm rounded-md border border-[var(--color-danger)]">
               {error}

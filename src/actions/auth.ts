@@ -1,8 +1,33 @@
 "use server"
 
+import { signIn as nextAuthSignIn } from "@/lib/auth"
+import { AuthError } from "next-auth"
 import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
+
+export async function login(formData: FormData) {
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+
+  try {
+    await nextAuthSignIn("credentials", {
+      email,
+      password,
+      redirectTo: "/dashboard",
+    })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { error: "Invalid credentials" }
+        default:
+          return { error: "Something went wrong" }
+      }
+    }
+    throw error // Important for Next.js redirect to work
+  }
+}
 
 export async function signup(formData: FormData) {
   const name = formData.get("name") as string
@@ -48,5 +73,6 @@ export async function signup(formData: FormData) {
     })
   }
 
+  revalidatePath("/admin")
   return { success: true }
 }
