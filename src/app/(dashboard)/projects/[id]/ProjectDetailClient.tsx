@@ -10,7 +10,7 @@ import {
   X, ChevronRight, Palette, ThumbsUp, Code, Bug, Monitor, Rocket
 } from "lucide-react"
 import { Badge, Button, Input, Label, Textarea, Modal } from "@/components/ui"
-import { moveProjectPhase, deleteProject, updateProjectDeadline } from "@/actions/projects"
+import { moveProjectPhase, deleteProject } from "@/actions/projects"
 import { addPage, updatePage, deletePage, assignPage } from "@/actions/pages"
 import { addComment, createRevision, resolveRevision } from "@/actions/misc"
 import {
@@ -36,23 +36,13 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [commentText, setCommentText] = useState("")
   const [isCopied, setIsCopied] = useState(false)
-  const [showEditDeadline, setShowEditDeadline] = useState(false)
-
-  async function handleUpdateDeadline(deadline: string) {
-    if (currentUser.role !== "ADMIN") return
-    startTransition(async () => {
-      await updateProjectDeadline(project.id, deadline)
-      setShowEditDeadline(false)
-      router.refresh()
-    })
-  }
 
   const progress = calculateProjectProgress(project)
   const daysLeft = getDaysUntilDeadline(project.deadline)
   const nextPhases = getNextPhases(
     project.currentPhase as Phase,
     currentUser.role as UserRole,
-    project.designQAEnabled
+    true
   )
 
   function handleMovePhase(newPhase: Phase) {
@@ -214,17 +204,14 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
           <div className="workflow-stepper no-scrollbar" style={{ padding: "0.5rem 0 1rem 0", overflowX: "auto", display: 'flex', gap: '0.5rem' }}>
             {PHASES_ORDER.map((phase, idx, arr) => {
               const currentIdx = arr.findIndex(p => p === project.currentPhase);
-              const isSkipped = !project.designQAEnabled && phase === "DESIGN_QA";
+              const isSkipped = false;
               const isPastPhase = currentIdx > idx || project.status === "COMPLETED";
               const isCompleted = isPastPhase && !isSkipped;
               const isActive = currentIdx === idx && project.status !== "COMPLETED" && !isSkipped;
               
               let color = "#6b7280"; 
               let bgColor = "rgba(107, 114, 128, 0.1)";
-              if (isSkipped) { 
-                color = "#ef4444"; 
-                bgColor = "rgba(239, 68, 68, 0.1)"; 
-              }
+              if (isSkipped) { color = "#4b5563"; bgColor = "transparent"; }
               else if (isCompleted) { color = "#10b981"; bgColor = "rgba(16, 185, 129, 0.15)"; }
               else if (isActive) { color = "#8b5cf6"; bgColor = "rgba(139, 92, 246, 0.25)"; }
 
@@ -246,24 +233,24 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "7.5rem", position: "relative" }}>
                     <div 
                       style={{ 
-                        width: "3.5rem", height: "3.5rem", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center", border: isSkipped ? "2px solid" : "2px solid", zIndex: 10,
+                        width: "3.5rem", height: "3.5rem", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center", border: isSkipped ? "2px dashed" : "2px solid", zIndex: 10,
                         borderColor: color, 
                         backgroundColor: bgColor,
                         color: color,
                         boxShadow: isActive ? `0 0 24px ${color}80` : 'none',
                         transition: "all 0.3s ease-in-out",
                         transform: isActive ? "scale(1.05)" : "scale(1)",
-                        opacity: isSkipped ? 0.8 : 1
+                        opacity: isSkipped ? 0.5 : 1
                       }}
                     >
                       {getIconForPhase(phase)}
                     </div>
-                    <div style={{ textAlign: "center", opacity: isSkipped ? 1 : 1 }}>
-                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isSkipped ? '#ef4444' : (isActive || isCompleted ? '#f1f0ff' : '#6b7280') }}>
-                        {isSkipped ? "QA Skipped" : getPhaseLabel(phase)}
+                    <div style={{ textAlign: "center", opacity: isSkipped ? 0.6 : 1 }}>
+                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: isActive || isCompleted ? '#f1f0ff' : '#6b7280', textDecoration: isSkipped ? 'line-through' : 'none' }}>
+                        {getPhaseLabel(phase)}
                       </div>
                       <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "0.35rem", color, transition: "color 0.3s" }}>
-                        {isSkipped ? "SKIPPED" : isCompleted ? "Done" : isActive ? "Active" : "Pending"}
+                        {isCompleted ? "Done" : isActive ? "Active" : "Pending"}
                       </div>
                     </div>
                   </div>
@@ -365,26 +352,13 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
               </p>
               <div className="divider" style={{ margin: "1.25rem 0" }} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Deadline</span>
-                    <span className="text-sm font-medium flex items-center gap-2">
-                      {formatDate(project.deadline)}
-                      {currentUser.role === "ADMIN" && (
-                        <button 
-                          className="btn btn-ghost btn-icon btn-xs" 
-                          onClick={() => setShowEditDeadline(true)}
-                          title="Change deadline"
-                        >
-                          <Calendar size={12} />
-                        </button>
-                      )}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Share Token</span>
-                    <code className="text-xs" style={{ color: "var(--color-primary-light)" }}>{project.shareToken}</code>
-                  </div>
+                <div>
+                  <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Deadline</span>
+                  <span className="text-sm font-medium">{formatDate(project.deadline)}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Share Token</span>
+                  <code className="text-xs" style={{ color: "var(--color-primary-light)" }}>{project.shareToken}</code>
                 </div>
                 <div>
                   <span className="text-xs text-muted" style={{ display: "block", marginBottom: "0.25rem" }}>Last Updated</span>
@@ -790,33 +764,6 @@ export function ProjectDetailClient({ project, users, currentUser }: ProjectDeta
             <Trash2 size={14} /> Delete Project
           </Button>
         </div>
-      </Modal>
-      {/* Edit Deadline Modal */}
-      <Modal isOpen={showEditDeadline} onClose={() => setShowEditDeadline(false)} title="Change Deadline" size="sm">
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          handleUpdateDeadline(formData.get("deadline") as string);
-        }}>
-          <div className="modal-body">
-            <div className="form-group">
-              <Label>New Deadline</Label>
-              <Input 
-                name="deadline" 
-                type="date" 
-                required 
-                defaultValue={new Date(project.deadline).toISOString().split('T')[0]} 
-              />
-            </div>
-            <p className="text-xs text-muted mt-2">
-              Only administrators can change the project deadline.
-            </p>
-          </div>
-          <div className="modal-footer">
-            <Button type="button" variant="ghost" onClick={() => setShowEditDeadline(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" disabled={isPending}>Update Deadline</Button>
-          </div>
-        </form>
       </Modal>
     </div>
   )

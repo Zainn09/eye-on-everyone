@@ -1,22 +1,53 @@
 "use client"
 
-import { useState } from "react"
+import { FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signIn } from "next-auth/react"
 import { Button, Input, Label } from "@/components/ui"
-import { login } from "@/actions/auth"
 
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [debugMessage, setDebugMessage] = useState<string | null>(null)
 
-  async function clientAction(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setLoading(true)
     setError(null)
-    const result = await login(formData)
-    if (result?.error) {
-      setError(result.error)
+    setDebugMessage(null)
+
+    const formData = new FormData(event.currentTarget)
+    const email = formData.get("email")?.toString() ?? ""
+    const password = formData.get("password")?.toString() ?? ""
+    const callbackUrl = `${window.location.origin}/dashboard`
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl,
+      })
+
+      setDebugMessage(JSON.stringify(result, null, 2))
+
+      if (!result) {
+        setError("No response from auth server.")
+      } else if (result.error) {
+        setError(result.error)
+      } else if (result.ok) {
+        router.push("/dashboard")
+      } else {
+        setError("Unable to sign in. Please try again.")
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Unexpected auth error"
+      setDebugMessage(message)
+      setError("Sign in failed. Check the debug message below.")
+    } finally {
       setLoading(false)
     }
   }
@@ -34,7 +65,7 @@ export default function LoginPage() {
           <p className="text-muted text-sm mt-1">Sign in to your account to continue</p>
         </div>
         
-        <form action={clientAction} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form">
           {error && (
             <div className="p-3 bg-[var(--color-danger-subtle)] text-[var(--color-danger)] text-sm rounded-md border border-[var(--color-danger)]">
               {error}
@@ -75,6 +106,12 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
+
+        {debugMessage ? (
+          <pre className="mt-4 p-3 rounded-md bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-xs text-[var(--color-text-muted)] whitespace-pre-wrap">
+            {debugMessage}
+          </pre>
+        ) : null}
         
         <div className="auth-footer">
           Don&apos;t have an account? <Link href="/signup">Sign up</Link>

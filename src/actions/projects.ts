@@ -13,7 +13,6 @@ const ProjectSchema = z.object({
   brief: z.string().min(10, "Brief must be at least 10 characters"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
   deadline: z.string().min(1, "Deadline is required"),
-  designQAEnabled: z.boolean().default(true),
 })
 
 export async function createProject(formData: FormData) {
@@ -29,12 +28,12 @@ export async function createProject(formData: FormData) {
     brief: formData.get("brief"),
     priority: formData.get("priority"),
     deadline: formData.get("deadline"),
-    designQAEnabled: true, // Always enabled by default, option removed from UI
   })
 
   const project = await prisma.project.create({
     data: {
       ...validated,
+      designQAEnabled: true,
       deadline: new Date(validated.deadline),
       creatorId: session.user.id,
       status: "NOT_STARTED",
@@ -79,7 +78,6 @@ export async function updateProject(projectId: string, formData: FormData) {
     brief: formData.get("brief"),
     priority: formData.get("priority"),
     deadline: formData.get("deadline"),
-    designQAEnabled: true,
   })
 
   await prisma.project.update({
@@ -109,29 +107,6 @@ export async function deleteProject(projectId: string) {
   redirect("/dashboard")
 }
 
-export async function updateProjectDeadline(projectId: string, deadline: string) {
-  const session = await auth()
-  if (!session?.user?.id) throw new Error("Unauthorized")
-  if (session.user.role !== "ADMIN") throw new Error("Only admins can change the deadline")
-
-  await prisma.project.update({
-    where: { id: projectId },
-    data: { deadline: new Date(deadline) },
-  })
-
-  await prisma.activity.create({
-    data: {
-      action: "deadline_changed",
-      details: `Deadline changed to ${deadline}`,
-      userId: session.user.id,
-      projectId,
-    },
-  })
-
-  revalidatePath(`/projects/${projectId}`)
-  revalidatePath("/dashboard")
-}
-
 export async function moveProjectPhase(
   projectId: string,
   newPhase: Phase,
@@ -149,7 +124,7 @@ export async function moveProjectPhase(
     project.currentPhase as Phase,
     newPhase,
     session.user.role as any,
-    project.designQAEnabled
+    true
   )
   if (!canMove) throw new Error("Transition not allowed")
 

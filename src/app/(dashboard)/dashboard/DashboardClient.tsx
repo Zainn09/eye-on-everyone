@@ -459,7 +459,7 @@ export function DashboardClient({ projects, activities, stats, userName, current
                             <div className="text-sm font-medium truncate">{assignment.assignee.name}</div>
                             <div className="text-xs text-muted truncate">{assignment.name} @ {assignment.projectName}</div>
                           </div>
-                          <Badge variant={assignment.devStatus === "COMPLETED" ? "success" : "warning"} size="sm">
+                          <Badge variant={assignment.devStatus === "COMPLETED" ? "success" : "warning"}>
                             {assignment.devStatus.replace("_", " ")}
                           </Badge>
                         </div>
@@ -484,8 +484,8 @@ export function DashboardClient({ projects, activities, stats, userName, current
                         <div className="text-xs text-secondary truncate">{task.name}</div>
                         <div className="mt-2 flex items-center justify-between">
                           <div className="flex gap-1">
-                            <Badge variant="muted" size="sm">{task.designStatus}</Badge>
-                            <Badge variant="info" size="sm">{task.devStatus}</Badge>
+                            <Badge variant="muted">{task.designStatus}</Badge>
+                            <Badge variant="info">{task.devStatus}</Badge>
                           </div>
                           <ArrowRight size={12} className="text-muted" />
                         </div>

@@ -11,11 +11,17 @@ export async function login(formData: FormData) {
   const password = formData.get("password") as string
 
   try {
-    await nextAuthSignIn("credentials", {
+    const result = await nextAuthSignIn("credentials", {
       email,
       password,
-      redirectTo: "/dashboard",
+      redirect: false,
     })
+
+    if (result && typeof result === "object" && "error" in result && result.error) {
+      return { error: result.error as string }
+    }
+
+    return { success: true }
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -25,7 +31,7 @@ export async function login(formData: FormData) {
           return { error: "Something went wrong" }
       }
     }
-    throw error // Important for Next.js redirect to work
+    throw error
   }
 }
 

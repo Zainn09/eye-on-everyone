@@ -66,8 +66,6 @@ export function SharedProjectClient({ project }: { project: any }) {
             
             <div className="workflow-stepper mt-4" style={{ overflowX: "visible" }}>
               {PHASES_ORDER.map((phase, i) => {
-                if (!project.designQAEnabled && phase === "DESIGN_QA") return null
-                
                 const isCompleted = PHASES_ORDER.indexOf(project.currentPhase) > i
                 const isActive = project.currentPhase === phase
                 const color = getPhaseColor(phase)
