@@ -13,7 +13,7 @@ async function main() {
     where: { email: "admin@projectmanager.com" },
     update: { status: "ACTIVE" },
     create: {
-      name: "Alex Admin",
+      name: "Elijah Admin",
       email: "admin@projectmanager.com",
       password: hashedPassword,
       role: "ADMIN",
@@ -25,7 +25,7 @@ async function main() {
     where: { email: "pm@projectmanager.com" },
     update: { status: "ACTIVE" },
     create: {
-      name: "Sara Manager",
+      name: "Klaus Manager",
       email: "pm@projectmanager.com",
       password: hashedPassword,
       role: "PROJECT_MANAGER",
@@ -37,7 +37,7 @@ async function main() {
     where: { email: "designer@projectmanager.com" },
     update: { status: "ACTIVE" },
     create: {
-      name: "David Designer",
+      name: "Stefan Designer",
       email: "designer@projectmanager.com",
       password: hashedPassword,
       role: "DESIGNER",
@@ -49,7 +49,7 @@ async function main() {
     where: { email: "dev@projectmanager.com" },
     update: { status: "ACTIVE" },
     create: {
-      name: "Emma Developer",
+      name: "Katherine Developer",
       email: "dev@projectmanager.com",
       password: hashedPassword,
       role: "DEVELOPER",
@@ -61,7 +61,7 @@ async function main() {
     where: { email: "qa@projectmanager.com" },
     update: { status: "ACTIVE" },
     create: {
-      name: "Quinn QA",
+      name: "Damon QA",
       email: "qa@projectmanager.com",
       password: hashedPassword,
       role: "QA",

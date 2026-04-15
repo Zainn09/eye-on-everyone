@@ -25,7 +25,7 @@ export function Sidebar() {
   return (
     <aside className="app-sidebar">
       <div className="sidebar-logo">
-        <h1>FlowDesk</h1>
+        <h1>Eye-On Everyone</h1>
         <span>Project Manager</span>
       </div>
 
