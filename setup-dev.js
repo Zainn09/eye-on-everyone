@@ -3,7 +3,7 @@
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
-const { execSync } = require('child_process')
+const { execSync, spawnSync } = require('child_process')
 
 // Get local IP address
 function getLocalIP() {
@@ -116,9 +116,23 @@ console.log('   http://localhost:3000\n')
 console.log('🌐 NETWORK SHARING (Other Devices on WiFi):')
 console.log(`   http://${localIP}:3000\n`)
 
+// Fetch share tokens from DB
 console.log('📱 SHARE LINKS (No Login Required):')
-console.log(`   http://${localIP}:3000/share/cmnokv8zr0008u33s3x63i77w`)
-console.log(`   http://${localIP}:3000/share/cmnokv90t000zu33sf88hzj7n\n`)
+try {
+  const result = spawnSync('node', [path.join(__dirname, 'tmp/list-shares.js'), localIP], {
+    encoding: 'utf-8',
+    timeout: 5000,
+  })
+  if (result.stdout) process.stdout.write(result.stdout)
+  else {
+    // Fallback: show static known tokens
+    console.log(`   http://${localIP}:3000/share/cmnokv8zr0008u33s3x63i77w  (Luxe Fashion Store)`)
+    console.log(`   http://${localIP}:3000/share/cmnokv90t000zu33sf88hzj7n  (Green Earth NGO Site)`)
+  }
+} catch {
+  console.log(`   http://${localIP}:3000/share/[token]`)
+}
+console.log()
 
 console.log('🔐 Demo Credentials (password: password123):')
 console.log('   • admin@projectmanager.com')
