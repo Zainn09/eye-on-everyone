@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs"
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma) as any,
   session: { strategy: "jwt" },
+  trustHost: true,
   cookies: {
     sessionToken: {
       name:
@@ -70,6 +71,15 @@ export const authOptions: NextAuthConfig = {
     })
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Allow relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allow callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      // Allow localhost and local network IPs
+      else if (url.includes("localhost") || url.includes("192.168.") || url.includes("127.0.0.1")) return url
+      return baseUrl
+    },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.sub as string

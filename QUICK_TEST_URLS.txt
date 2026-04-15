@@ -1,0 +1,98 @@
+═══════════════════════════════════════════════════════════════
+  FLOWDESK - QUICK TEST URLS FOR OTHER DEVICES
+═══════════════════════════════════════════════════════════════
+
+📡 YOUR NETWORK INFO:
+   Local IP: 192.168.1.15
+   Port: 3000
+   Status: ✅ Server Running
+
+═══════════════════════════════════════════════════════════════
+
+🔐 MAIN APP (Requires Login):
+   http://192.168.1.15:3000
+
+   Demo Accounts (password: password123):
+   • admin@projectmanager.com (Admin)
+   • pm@projectmanager.com (Project Manager)
+   • designer@projectmanager.com (Designer)
+   • dev@projectmanager.com (Developer)
+   • qa@projectmanager.com (QA)
+
+═══════════════════════════════════════════════════════════════
+
+🔗 SHARE URLS (No Login Required):
+
+1️⃣  Luxe Fashion Store
+   http://192.168.1.15:3000/share/cmnokv8zr0008u33s3x63i77w
+
+2️⃣  Green Earth NGO Site
+   http://192.168.1.15:3000/share/cmnokv90t000zu33sf88hzj7n
+
+3️⃣  Nova Restaurant App
+   http://192.168.1.15:3000/share/cmnokv916001au33s4nex5r6o
+
+4️⃣  SportsPro E-Commerce
+   http://192.168.1.15:3000/share/cmnokv91j001ju33swcpease3
+
+5️⃣  HealthFirst Clinic Portal
+   http://192.168.1.15:3000/share/cmnokv91x001tu33sdvers9x1
+
+6️⃣  Nine AM Roast
+   http://192.168.1.15:3000/share/cmnpr5dye0003u3as64oynktj
+
+═══════════════════════════════════════════════════════════════
+
+📱 HOW TO TEST:
+
+   1. Connect your other laptop to the SAME WiFi network
+   
+   2. Open any browser on that device
+   
+   3. Copy and paste any of the share URLs above
+   
+   4. The project should load WITHOUT asking for login!
+
+═══════════════════════════════════════════════════════════════
+
+✅ WHAT YOU SHOULD SEE:
+
+   ✓ Project name and client name
+   ✓ Project brief/description
+   ✓ Workflow progress stepper
+   ✓ Current phase highlighted
+   ✓ Deliverables list with status
+   ✓ Progress percentage
+   ✓ Clean, professional layout
+   ✓ FlowDesk branding
+
+❌ WHAT YOU SHOULD NOT SEE:
+
+   ✗ Login page
+   ✗ Comments section
+   ✗ Activity timeline
+   ✗ Edit/Delete buttons
+   ✗ Internal notes
+   ✗ Team assignments
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TROUBLESHOOTING:
+
+   Can't connect?
+   → Check both devices are on same WiFi
+   → Verify server is running (should see "Ready in..." message)
+   → Try http://192.168.1.15:3000 first
+
+   Asks for login?
+   → Make sure URL starts with /share/ not /projects/
+   → Try in incognito/private mode
+   → Clear browser cache
+
+═══════════════════════════════════════════════════════════════
+
+📞 NEED HELP?
+
+   See detailed guide: SHARE_URL_TESTING.md
+
+═══════════════════════════════════════════════════════════════

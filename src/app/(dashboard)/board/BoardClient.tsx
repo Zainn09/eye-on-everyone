@@ -88,7 +88,7 @@ export function BoardClient({ projects, currentUser }: BoardClientProps) {
                     const nextPhases = getNextPhases(
                       phase,
                       currentUser.role as UserRole,
-                      true
+                      project.designQAEnabled
                     )
 
                     return (

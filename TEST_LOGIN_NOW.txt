@@ -1,0 +1,94 @@
+═══════════════════════════════════════════════════════════════
+  🔐 LOGIN FIX - TEST INSTRUCTIONS
+═══════════════════════════════════════════════════════════════
+
+✅ FIX APPLIED - Server Restarted with New Configuration
+
+═══════════════════════════════════════════════════════════════
+
+📱 TEST ON YOUR OTHER LAPTOP:
+
+1. Open browser (Chrome, Firefox, Edge, etc.)
+
+2. Go to this URL:
+   http://192.168.1.15:3000
+
+3. You should see the FlowDesk login page
+
+4. Enter these credentials:
+   Email: admin@projectmanager.com
+   Password: password123
+
+5. Click "Sign In"
+
+6. ✅ SHOULD HAPPEN:
+   • Login processes (button shows "Signing in...")
+   • Redirects to dashboard
+   • Dashboard loads with projects
+   • You see sidebar with navigation
+   • No errors in browser console
+
+7. ❌ SHOULD NOT HAPPEN:
+   • Stays on login page
+   • Shows error message
+   • Redirects back to login
+   • Console shows errors
+
+═══════════════════════════════════════════════════════════════
+
+🔧 WHAT WAS FIXED:
+
+1. NextAuth now trusts network IP requests
+2. Next.js allows HMR from network IP
+3. Custom redirect callback handles local IPs
+4. Server configuration updated
+
+═══════════════════════════════════════════════════════════════
+
+🐛 IF IT STILL DOESN'T WORK:
+
+1. Clear browser cache (Ctrl+Shift+Delete)
+2. Try incognito/private mode
+3. Check browser console (F12) for errors
+4. Verify both devices on same WiFi
+5. Check server is running (should see "Ready in..." message)
+
+═══════════════════════════════════════════════════════════════
+
+📊 ALSO TEST:
+
+After successful login:
+
+✓ Navigate to Dashboard
+✓ Navigate to Board
+✓ Navigate to Analytics
+✓ Open a project
+✓ Refresh the page (should stay logged in)
+✓ Log out (should redirect to login)
+
+═══════════════════════════════════════════════════════════════
+
+🔗 SHARE LINKS STILL WORK:
+
+These should work WITHOUT login:
+
+http://192.168.1.15:3000/share/cmnokv8zr0008u33s3x63i77w
+http://192.168.1.15:3000/share/cmnokv90t000zu33sf88hzj7n
+
+═══════════════════════════════════════════════════════════════
+
+✅ SERVER STATUS:
+
+Running: YES
+IP: 192.168.1.15
+Port: 3000
+Configuration: UPDATED
+Ready: YES
+
+═══════════════════════════════════════════════════════════════
+
+🎯 TEST NOW!
+
+Open http://192.168.1.15:3000 on your other laptop and try logging in.
+
+═══════════════════════════════════════════════════════════════
