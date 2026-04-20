@@ -23,11 +23,14 @@ model User {
   updatedAt     DateTime  @updatedAt
   
   // Relations
-  assignedPages Page[]       @relation("AssignedTo")
-  createdProjects Project[]    @relation("CreatedBy")
-  comments      Comment[]
-  activities    Activity[]
-  notifications Notification[]
+  assignedPages   Page[]        @relation("AssignedTo")
+  createdProjects Project[]     @relation("CreatedBy")
+  comments        Comment[]
+  activities      Activity[]
+  notifications   Notification[]
+  assignedTasks   Task[]        @relation("TaskAssignee")
+  createdTasks    Task[]        @relation("TaskCreator")
+  createdChecklists Checklist[] @relation("ChecklistCreator")
 }
 
 // Projects
@@ -54,6 +57,8 @@ model Project {
   comments      Comment[]
   activities    Activity[]
   revisions     Revision[]
+  tasks         Task[]
+  checklists    Checklist[]
 }
 
 // Pages / Tasks (per project)
@@ -157,4 +162,54 @@ model Notification {
   
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// Tasks (inside projects, with controlled workflow)
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("TODO") // "TODO", "IN_PROGRESS", "IN_REVIEW", "COMPLETED"
+  priority    String   @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "URGENT"
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  assigneeId  String?
+  assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  creatorId   String
+  creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
+}
+
+// Checklists (global or per-project)
+model Checklist {
+  id          String          @id @default(cuid())
+  title       String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  projectId   String?
+  project     Project?        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  creatorId   String
+  creator     User            @relation("ChecklistCreator", fields: [creatorId], references: [id])
+
+  items       ChecklistItem[]
+}
+
+// Checklist Items
+model ChecklistItem {
+  id          String    @id @default(cuid())
+  title       String
+  completed   Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  checklistId String
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
 }
