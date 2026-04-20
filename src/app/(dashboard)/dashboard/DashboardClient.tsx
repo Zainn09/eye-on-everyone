@@ -5,8 +5,9 @@ import Link from "next/link"
 import {
   FolderKanban, Clock, CheckCircle2, AlertTriangle,
   Calendar, FileText, MessageSquare, ArrowRight,
-  Search, Filter, GitBranch, Plus, Activity, BarChart2,
-  Palette, ThumbsUp, Code, Bug, Monitor, Rocket
+  Search, GitBranch, Plus, Activity, BarChart2,
+  Palette, ThumbsUp, Code, Bug, Monitor, Rocket,
+  CalendarDays, X
 } from "lucide-react"
 import { Badge } from "@/components/ui"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
@@ -29,11 +30,26 @@ interface DashboardClientProps {
   currentUserRole: string
 }
 
+type DateRange = "all" | "1y" | "6m" | "1m" | "1w"
+
+function getDateRangeStart(range: DateRange): Date | null {
+  const now = new Date()
+  switch (range) {
+    case "1y": return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+    case "6m": return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)
+    case "1m": return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    case "1w": return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    default: return null
+  }
+}
+
 export function DashboardClient({ projects, activities, stats, userName, currentUserId, currentUserRole }: DashboardClientProps) {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [phaseFilter, setPhaseFilter] = useState("")
   const [priorityFilter, setPriorityFilter] = useState("")
+  const [dateRange, setDateRange] = useState<DateRange>("all")
+  const [statClickFilter, setStatClickFilter] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     return projects.filter(p => {

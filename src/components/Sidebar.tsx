@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, KanbanSquare, PieChart, Users, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, KanbanSquare, PieChart, Users, LogOut, TrendingUp, CheckSquare } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getInitials, generateAvatarColor } from "@/lib/utils"
 
@@ -20,6 +20,7 @@ export function Sidebar() {
 
   if (user?.role === "ADMIN") {
     navigation.push({ name: "Team", href: "/admin", icon: Users })
+    navigation.push({ name: "Insights", href: "/insights", icon: TrendingUp })
   }
 
   return (
