@@ -9,7 +9,7 @@ const nextConfig = {
     remotePatterns: [],
   },
   // Allow cross-origin requests from local network IPs for dev testing
-  allowedDevOrigins: ['192.168.1.4', 'localhost', '127.0.0.1'],
+  allowedDevOrigins: ['192.168.1.6', 'localhost', '127.0.0.1'],
   async headers() {
     return [
       {
