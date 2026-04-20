@@ -51,8 +51,34 @@ export function DashboardClient({ projects, activities, stats, userName, current
   const [dateRange, setDateRange] = useState<DateRange>("all")
   const [statClickFilter, setStatClickFilter] = useState<string | null>(null)
 
+  const dateStart = useMemo(() => getDateRangeStart(dateRange), [dateRange])
+
+  // Projects filtered by date range
+  const dateFilteredProjects = useMemo(() => {
+    if (!dateStart) return projects
+    return projects.filter(p => new Date(p.createdAt) >= dateStart!)
+  }, [projects, dateStart])
+
+  // Computed stats based on date range
+  const filteredStats = useMemo(() => {
+    const p = dateFilteredProjects
+    return {
+      totalProjects: p.length,
+      inProgress: p.filter(x => x.status === "IN_PROGRESS").length,
+      completed: p.filter(x => x.status === "COMPLETED").length,
+      overdue: p.filter(x => new Date(x.deadline) < new Date() && x.status !== "COMPLETED").length,
+    }
+  }, [dateFilteredProjects])
+
   const filtered = useMemo(() => {
-    return projects.filter(p => {
+    let base = dateFilteredProjects
+
+    // Apply stat click filter
+    if (statClickFilter === "IN_PROGRESS") base = base.filter(p => p.status === "IN_PROGRESS")
+    else if (statClickFilter === "COMPLETED") base = base.filter(p => p.status === "COMPLETED")
+    else if (statClickFilter === "OVERDUE") base = base.filter(p => new Date(p.deadline) < new Date() && p.status !== "COMPLETED")
+
+    return base.filter(p => {
       const matchSearch = !search ||
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.clientName.toLowerCase().includes(search.toLowerCase())
@@ -61,7 +87,7 @@ export function DashboardClient({ projects, activities, stats, userName, current
       const matchPriority = !priorityFilter || p.priority === priorityFilter
       return matchSearch && matchStatus && matchPhase && matchPriority
     })
-  }, [projects, search, statusFilter, phaseFilter, priorityFilter])
+  }, [dateFilteredProjects, search, statusFilter, phaseFilter, priorityFilter, statClickFilter])
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -120,47 +146,155 @@ export function DashboardClient({ projects, activities, stats, userName, current
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Date Range Filter */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+        <CalendarDays size={16} style={{ color: "var(--color-text-muted)" }} />
+        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginRight: "0.25rem" }}>Period:</span>
+        {([
+          { value: "all", label: "All Time" },
+          { value: "1y", label: "1 Year" },
+          { value: "6m", label: "6 Months" },
+          { value: "1m", label: "1 Month" },
+          { value: "1w", label: "1 Week" },
+        ] as { value: DateRange; label: string }[]).map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setDateRange(opt.value)}
+            style={{
+              padding: "0.3rem 0.75rem",
+              borderRadius: "var(--radius-full)",
+              fontSize: "0.78rem",
+              fontWeight: 500,
+              border: "1px solid",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              background: dateRange === opt.value ? "var(--color-primary)" : "var(--color-bg-elevated)",
+              borderColor: dateRange === opt.value ? "var(--color-primary)" : "var(--color-border)",
+              color: dateRange === opt.value ? "#fff" : "var(--color-text-secondary)",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+        {statClickFilter && (
+          <button
+            onClick={() => setStatClickFilter(null)}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.35rem",
+              padding: "0.3rem 0.75rem",
+              borderRadius: "var(--radius-full)",
+              fontSize: "0.78rem",
+              fontWeight: 500,
+              border: "1px solid rgba(139,92,246,0.4)",
+              cursor: "pointer",
+              background: "rgba(139,92,246,0.1)",
+              color: "#a78bfa",
+            }}
+          >
+            <X size={12} />
+            Clear: {statClickFilter.replace("_", " ")}
+          </button>
+        )}
+      </div>
+
+      {/* Stats Cards — Clickable */}
       <div className="stats-grid" style={{ marginBottom: "2rem" }}>
-        <div className="stat-card" style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.01))", borderColor: "rgba(139,92,246,0.2)" }}>
-          <div className="stat-icon" style={{ background: "rgba(139,92,246,0.15)", color: "#a78bfa" }}>
-            <FolderKanban size={24} />
+        <button
+          onClick={() => setStatClickFilter(statClickFilter === null ? null : null)}
+          style={{ all: "unset", cursor: "pointer", display: "block" }}
+        >
+          <div className="stat-card" style={{
+            background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.01))",
+            borderColor: "rgba(139,92,246,0.2)",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}>
+            <div className="stat-icon" style={{ background: "rgba(139,92,246,0.15)", color: "#a78bfa" }}>
+              <FolderKanban size={24} />
+            </div>
+            <div>
+              <div className="stat-value">{filteredStats.totalProjects}</div>
+              <div className="stat-label">Total Projects</div>
+              {dateRange !== "all" && (
+                <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: "0.2rem" }}>
+                  in selected period
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.totalProjects}</div>
-            <div className="stat-label">Total Projects</div>
-          </div>
-        </div>
+        </button>
 
-        <div className="stat-card" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.01))", borderColor: "rgba(59,130,246,0.2)" }}>
-          <div className="stat-icon" style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>
-            <Clock size={24} />
+        <button
+          onClick={() => setStatClickFilter(statClickFilter === "IN_PROGRESS" ? null : "IN_PROGRESS")}
+          style={{ all: "unset", cursor: "pointer", display: "block" }}
+        >
+          <div className="stat-card" style={{
+            background: statClickFilter === "IN_PROGRESS"
+              ? "linear-gradient(135deg, rgba(59,130,246,0.18), rgba(59,130,246,0.05))"
+              : "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.01))",
+            borderColor: statClickFilter === "IN_PROGRESS" ? "rgba(59,130,246,0.5)" : "rgba(59,130,246,0.2)",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: statClickFilter === "IN_PROGRESS" ? "0 0 16px rgba(59,130,246,0.2)" : "none",
+          }}>
+            <div className="stat-icon" style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>
+              <Clock size={24} />
+            </div>
+            <div>
+              <div className="stat-value">{filteredStats.inProgress}</div>
+              <div className="stat-label">In Progress</div>
+              <div style={{ fontSize: "0.7rem", color: "#60a5fa", marginTop: "0.2rem" }}>Click to filter ↓</div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.inProgress}</div>
-            <div className="stat-label">In Progress</div>
-          </div>
-        </div>
+        </button>
 
-        <div className="stat-card" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.01))", borderColor: "rgba(16,185,129,0.2)" }}>
-          <div className="stat-icon" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399" }}>
-            <CheckCircle2 size={24} />
+        <button
+          onClick={() => setStatClickFilter(statClickFilter === "COMPLETED" ? null : "COMPLETED")}
+          style={{ all: "unset", cursor: "pointer", display: "block" }}
+        >
+          <div className="stat-card" style={{
+            background: statClickFilter === "COMPLETED"
+              ? "linear-gradient(135deg, rgba(16,185,129,0.18), rgba(16,185,129,0.05))"
+              : "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.01))",
+            borderColor: statClickFilter === "COMPLETED" ? "rgba(16,185,129,0.5)" : "rgba(16,185,129,0.2)",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: statClickFilter === "COMPLETED" ? "0 0 16px rgba(16,185,129,0.2)" : "none",
+          }}>
+            <div className="stat-icon" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399" }}>
+              <CheckCircle2 size={24} />
+            </div>
+            <div>
+              <div className="stat-value">{filteredStats.completed}</div>
+              <div className="stat-label">Completed</div>
+              <div style={{ fontSize: "0.7rem", color: "#34d399", marginTop: "0.2rem" }}>Click to filter ↓</div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.completed}</div>
-            <div className="stat-label">Completed</div>
-          </div>
-        </div>
+        </button>
 
-        <div className="stat-card" style={{ background: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.01))", borderColor: "rgba(239,68,68,0.2)" }}>
-          <div className="stat-icon" style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
-            <AlertTriangle size={24} />
+        <button
+          onClick={() => setStatClickFilter(statClickFilter === "OVERDUE" ? null : "OVERDUE")}
+          style={{ all: "unset", cursor: "pointer", display: "block" }}
+        >
+          <div className="stat-card" style={{
+            background: statClickFilter === "OVERDUE"
+              ? "linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.05))"
+              : "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.01))",
+            borderColor: statClickFilter === "OVERDUE" ? "rgba(239,68,68,0.5)" : "rgba(239,68,68,0.2)",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: statClickFilter === "OVERDUE" ? "0 0 16px rgba(239,68,68,0.2)" : "none",
+          }}>
+            <div className="stat-icon" style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+              <AlertTriangle size={24} />
+            </div>
+            <div>
+              <div className="stat-value">{filteredStats.overdue}</div>
+              <div className="stat-label">Overdue</div>
+              <div style={{ fontSize: "0.7rem", color: "#f87171", marginTop: "0.2rem" }}>Click to filter ↓</div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.overdue}</div>
-            <div className="stat-label">Overdue</div>
-          </div>
-        </div>
+        </button>
       </div>
 
       {/* Analytics Overview and Quick Actions */}
@@ -172,10 +306,10 @@ export function DashboardClient({ projects, activities, stats, userName, current
           <div style={{ height: "240px", width: "100%" }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={[
-                { name: 'Not Started', value: stats.totalProjects - stats.inProgress - stats.completed - stats.overdue, color: '#6b7280' },
-                { name: 'In Progress', value: stats.inProgress, color: '#3b82f6' },
-                { name: 'Completed', value: stats.completed, color: '#10b981' },
-                { name: 'Overdue', value: stats.overdue, color: '#ef4444' }
+                { name: 'Not Started', value: filteredStats.totalProjects - filteredStats.inProgress - filteredStats.completed - filteredStats.overdue, color: '#6b7280' },
+                { name: 'In Progress', value: filteredStats.inProgress, color: '#3b82f6' },
+                { name: 'Completed', value: filteredStats.completed, color: '#10b981' },
+                { name: 'Overdue', value: filteredStats.overdue, color: '#ef4444' }
               ]}>
                 <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ background: '#16161f', borderColor: '#2a2a3a', borderRadius: '8px' }} />
