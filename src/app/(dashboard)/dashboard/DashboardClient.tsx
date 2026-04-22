@@ -10,11 +10,15 @@ import {
   CalendarDays, X
 } from "lucide-react"
 import { Badge } from "@/components/ui"
+import { StatusTag } from "@/components/StatusTag"
+import { ChecklistSummaryWidget } from "./ChecklistSummaryWidget"
+import { computeStatusTag } from "@/lib/statusTags"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import {
   formatRelativeTime, getDaysUntilDeadline,
   calculateProjectProgress, getPhaseLabel, getPhaseColor
 } from "@/lib/utils"
+import type { ChecklistSummaryWidgetProps } from "@/types/platform"
 
 interface DashboardClientProps {
   projects: any[]
@@ -25,6 +29,7 @@ interface DashboardClientProps {
     completed: number
     overdue: number
   }
+  checklists: ChecklistSummaryWidgetProps["checklists"]
   userName: string
   currentUserId: string
   currentUserRole: string
@@ -43,7 +48,7 @@ function getDateRangeStart(range: DateRange): Date | null {
   }
 }
 
-export function DashboardClient({ projects, activities, stats, userName, currentUserId, currentUserRole }: DashboardClientProps) {
+export function DashboardClient({ projects, activities, stats, checklists, userName, currentUserId, currentUserRole }: DashboardClientProps) {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [phaseFilter, setPhaseFilter] = useState("")
@@ -548,6 +553,7 @@ export function DashboardClient({ projects, activities, stats, userName, current
                           <GitBranch size={12} />
                           {getPhaseLabel(project.currentPhase)}
                         </span>
+                        <StatusTag tag={computeStatusTag(project, [], new Date())} />
                       </div>
 
                       {/* Progress bar */}
@@ -703,6 +709,9 @@ export function DashboardClient({ projects, activities, stats, userName, current
               )}
             </div>
           </div>
+
+          {/* Checklist Summary Widget */}
+          <ChecklistSummaryWidget checklists={checklists} />
         </div>
       </div>
     </div>

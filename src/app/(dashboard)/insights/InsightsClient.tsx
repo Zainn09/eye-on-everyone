@@ -27,6 +27,7 @@ interface InsightsClientProps {
       pagesAssigned: number
       pagesCompleted: number
       completionRate: number
+      avgCompletionTime: number | null
     }>
     bottlenecks: string[]
     needsAssistance: Array<{ project: string; reason: string; severity: "high" | "medium" | "low" }>
@@ -82,6 +83,13 @@ export function InsightsClient({ insights }: InsightsClientProps) {
   const topPerformers = [...userPerformance]
     .sort((a, b) => b.completionRate - a.completionRate)
     .slice(0, 5)
+
+  const teamAvg = useMemo(() => {
+    const vals = userPerformance
+      .filter(p => p.avgCompletionTime !== null)
+      .map(p => p.avgCompletionTime!)
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null
+  }, [userPerformance])
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -318,7 +326,7 @@ export function InsightsClient({ insights }: InsightsClientProps) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                {["Team Member", "Role", "Assigned", "In Progress", "In Review", "Completed", "Overdue", "Rate"].map(h => (
+                {["Team Member", "Role", "Assigned", "In Progress", "In Review", "Completed", "Overdue", "Rate", "Avg. Days"].map(h => (
                   <th key={h} style={{
                     padding: "0.75rem 1.25rem",
                     textAlign: "left",
@@ -335,7 +343,7 @@ export function InsightsClient({ insights }: InsightsClientProps) {
             <tbody>
               {userPerformance.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
+                  <td colSpan={9} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
                     No team members found
                   </td>
                 </tr>
@@ -423,6 +431,21 @@ export function InsightsClient({ insights }: InsightsClientProps) {
                           {perf.completionRate}%
                         </span>
                       </div>
+                    </td>
+                    <td style={{ padding: "0.875rem 1.25rem" }}>
+                      {perf.avgCompletionTime === null ? (
+                        <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>—</span>
+                      ) : (
+                        <span style={{
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: teamAvg !== null && perf.avgCompletionTime > teamAvg
+                            ? "#fbbf24"
+                            : "var(--color-text-secondary)",
+                        }}>
+                          {perf.avgCompletionTime}d
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
