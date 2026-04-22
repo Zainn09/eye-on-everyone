@@ -155,3 +155,17 @@ export async function getProjectChecklists(projectId: string) {
     orderBy: { createdAt: "desc" },
   })
 }
+
+// Get all checklists (global + project-linked) for the dashboard summary widget
+export async function getAllChecklistsForUser() {
+  const session = await auth()
+  if (!session?.user?.id) return []
+
+  return prisma.checklist.findMany({
+    include: {
+      items: { select: { completed: true } },
+      project: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}

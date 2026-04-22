@@ -71,6 +71,17 @@ export async function getAdminInsights() {
       t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "COMPLETED"
     )
 
+    // Average completion time: mean days from createdAt to updatedAt for COMPLETED tasks
+    const completedWithDates = completedTasks.filter(t => t.createdAt && t.updatedAt)
+    const avgCompletionTime: number | null = completedWithDates.length > 0
+      ? Math.round(
+          (completedWithDates.reduce(
+            (sum, t) => sum + (new Date(t.updatedAt).getTime() - new Date(t.createdAt).getTime()),
+            0
+          ) / completedWithDates.length / 86_400_000) * 10
+        ) / 10
+      : null
+
     return {
       user,
       tasksAssigned: assignedTasks.length,
@@ -84,6 +95,7 @@ export async function getAdminInsights() {
       completionRate: assignedTasks.length > 0
         ? Math.round((completedTasks.length / assignedTasks.length) * 100)
         : 0,
+      avgCompletionTime,
     }
   })
 
