@@ -248,7 +248,6 @@ export function DashboardClient({ projects, activities, stats, checklists, userN
             <div>
               <div className="stat-value">{filteredStats.inProgress}</div>
               <div className="stat-label">In Progress</div>
-              <div style={{ fontSize: "0.7rem", color: "#60a5fa", marginTop: "0.2rem" }}>Click to filter ↓</div>
             </div>
           </div>
         </button>
@@ -272,7 +271,6 @@ export function DashboardClient({ projects, activities, stats, checklists, userN
             <div>
               <div className="stat-value">{filteredStats.completed}</div>
               <div className="stat-label">Completed</div>
-              <div style={{ fontSize: "0.7rem", color: "#34d399", marginTop: "0.2rem" }}>Click to filter ↓</div>
             </div>
           </div>
         </button>
@@ -296,7 +294,6 @@ export function DashboardClient({ projects, activities, stats, checklists, userN
             <div>
               <div className="stat-value">{filteredStats.overdue}</div>
               <div className="stat-label">Overdue</div>
-              <div style={{ fontSize: "0.7rem", color: "#f87171", marginTop: "0.2rem" }}>Click to filter ↓</div>
             </div>
           </div>
         </button>
