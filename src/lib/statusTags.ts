@@ -6,7 +6,7 @@ interface ProjectForTag {
   status: string
   deadline: Date | string
   currentPhase: string
-  activities: Array<{
+  activities?: Array<{
     action: string
     details: string | null
     createdAt: Date | string
@@ -23,6 +23,8 @@ export function computeStatusTag(
   needsAssistanceHighProjects: string[],
   now: Date = new Date()
 ): StatusTagConfig | null {
+  if (!project) return null
+
   // 1. Blocked
   if (project.status === "BLOCKED") {
     return {
@@ -33,7 +35,7 @@ export function computeStatusTag(
   }
 
   // 2. Overdue
-  if (new Date(project.deadline) < now && project.status !== "COMPLETED") {
+  if (project.deadline && new Date(project.deadline) < now && project.status !== "COMPLETED") {
     return {
       label: "Overdue" as StatusTagType,
       color: "#EF4444",
@@ -44,13 +46,13 @@ export function computeStatusTag(
   // 3. Needs Assistance
   const nameMatch = needsAssistanceHighProjects.includes(project.name)
 
-  const phaseChangedActivities = project.activities.filter(
+  const activities = project.activities ?? []
+  const phaseChangedActivities = activities.filter(
     (a) => a.action === "phase_changed"
   )
 
   let stalePhaseChange = false
   if (phaseChangedActivities.length > 0) {
-    // Find the most recent phase_changed activity
     const mostRecent = phaseChangedActivities.reduce((latest, a) => {
       return new Date(a.createdAt) > new Date(latest.createdAt) ? a : latest
     })
@@ -68,7 +70,7 @@ export function computeStatusTag(
   }
 
   // 4. In Review
-  if (IN_REVIEW_PHASES.includes(project.currentPhase)) {
+  if (project.currentPhase && IN_REVIEW_PHASES.includes(project.currentPhase)) {
     return {
       label: "In Review" as StatusTagType,
       color: "#06B6D4",
